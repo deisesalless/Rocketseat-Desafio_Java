@@ -1,6 +1,7 @@
 package com.deisesales.certification_nlw.modules.students.useCases;
 
 import com.deisesales.certification_nlw.modules.students.dto.StudentCertificationAnswerDTO;
+import com.deisesales.certification_nlw.modules.students.dto.VerifyHasCertificationDTO;
 import com.deisesales.certification_nlw.modules.students.entities.AnswersCertificationsEntity;
 import com.deisesales.certification_nlw.modules.students.entities.CertificationStudentEntity;
 import com.deisesales.certification_nlw.modules.students.entities.StudentEntity;
@@ -28,10 +29,20 @@ public class StudentCertificationAnswersUseCase {
     @Autowired
     private CertificationStudentEntityRepository certificationStudentEntityRepository;
 
-    public CertificationStudentEntity execute(StudentCertificationAnswerDTO dto) {
+    @Autowired
+    private VerifyIfHasCertificationUseCase verifyIfHasCertificationUseCase;
+
+    public CertificationStudentEntity execute(StudentCertificationAnswerDTO dto) throws Exception {
+
+        var hasCertification = this.verifyIfHasCertificationUseCase.execute(new VerifyHasCertificationDTO(dto.getEmail(), dto.getTechnology()));
+
+        if(hasCertification) {
+            throw new Exception("Sua certificação já foi emitida");
+        }
 
         List<QuestionEntity> questionsEntities = questionRepository.findByTechnology(dto.getTechnology());
         List<AnswersCertificationsEntity> answersCertifications = new ArrayList<>();
+        AtomicInteger correctAnswers = new AtomicInteger(0);
 
         dto.getQuestionsAnswers().stream().forEach(questionAnswerDTO -> {
             var ask = questionsEntities.stream().filter(question -> question.getId().equals(questionAnswerDTO.getQuestionID())).findFirst().get();
@@ -39,6 +50,8 @@ public class StudentCertificationAnswersUseCase {
 
             if (findCorrectAlternative.getId().equals(questionAnswerDTO.getAlternativeID())) {
                 questionAnswerDTO.setCorrect(true);
+                correctAnswers.incrementAndGet();
+
             } else {
                 questionAnswerDTO.setCorrect(false);
             }
@@ -59,7 +72,7 @@ public class StudentCertificationAnswersUseCase {
             studentID = student.get().getId();
         }
 
-        CertificationStudentEntity certificationStudentEntity = CertificationStudentEntity.builder().technology(dto.getTechnology()).studentID(studentID).build();
+        CertificationStudentEntity certificationStudentEntity = CertificationStudentEntity.builder().technology(dto.getTechnology()).studentID(studentID).grate(correctAnswers.get()).build();
         var certificationStudentCreated = certificationStudentEntityRepository.save(certificationStudentEntity);
 
         answersCertifications.stream().forEach(answersCertificationsEntity -> {

@@ -30,7 +30,7 @@ public class CertificationStudentEntity {
     @Column(length = 10)
     private int grate;
 
-    @JoinColumn(name = "student_id", insertable = false, updatable = false)
+    @Column(name = "student_id")
     private UUID studentID;
 
     @ManyToOne
