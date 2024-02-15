@@ -7,7 +7,7 @@ import com.deisesales.certification_nlw.modules.students.entities.CertificationS
 import com.deisesales.certification_nlw.modules.students.entities.StudentEntity;
 import com.deisesales.certification_nlw.modules.students.questions.entities.QuestionEntity;
 import com.deisesales.certification_nlw.modules.students.questions.repositories.QuestionRepository;
-import com.deisesales.certification_nlw.modules.students.repositories.CertificationStudentEntityRepository;
+import com.deisesales.certification_nlw.modules.students.repositories.CertificationStudentRepository;
 import com.deisesales.certification_nlw.modules.students.repositories.StudentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -27,7 +27,7 @@ public class StudentCertificationAnswersUseCase {
     private StudentRepository studentRepository;
 
     @Autowired
-    private CertificationStudentEntityRepository certificationStudentEntityRepository;
+    private CertificationStudentRepository certificationStudentRepository;
 
     @Autowired
     private VerifyIfHasCertificationUseCase verifyIfHasCertificationUseCase;
@@ -73,7 +73,7 @@ public class StudentCertificationAnswersUseCase {
         }
 
         CertificationStudentEntity certificationStudentEntity = CertificationStudentEntity.builder().technology(dto.getTechnology()).studentID(studentID).grate(correctAnswers.get()).build();
-        var certificationStudentCreated = certificationStudentEntityRepository.save(certificationStudentEntity);
+        var certificationStudentCreated = certificationStudentRepository.save(certificationStudentEntity);
 
         answersCertifications.stream().forEach(answersCertificationsEntity -> {
             answersCertificationsEntity.setCertificationID(certificationStudentEntity.getId());
@@ -81,7 +81,7 @@ public class StudentCertificationAnswersUseCase {
         });
 
         certificationStudentEntity.setAnswersCertificationsEntities(answersCertifications);
-        certificationStudentEntityRepository.save(certificationStudentEntity);
+        certificationStudentRepository.save(certificationStudentEntity);
 
         return certificationStudentCreated;
     }

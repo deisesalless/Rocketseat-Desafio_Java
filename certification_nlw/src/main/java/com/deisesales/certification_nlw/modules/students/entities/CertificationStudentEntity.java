@@ -1,5 +1,6 @@
 package com.deisesales.certification_nlw.modules.students.entities;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import jakarta.persistence.metamodel.Type;
@@ -35,6 +36,7 @@ public class CertificationStudentEntity {
 
     @ManyToOne
     @JoinColumn(name = "student_id", insertable = false, updatable = false)
+    @JsonBackReference
     private StudentEntity studentEntity;
 
     @OneToMany(cascade = CascadeType.ALL)
