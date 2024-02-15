@@ -31,6 +31,7 @@ public class StudentCertificationAnswersUseCase {
     public CertificationStudentEntity execute(StudentCertificationAnswerDTO dto) {
 
         List<QuestionEntity> questionsEntities = questionRepository.findByTechnology(dto.getTechnology());
+        List<AnswersCertificationsEntity> answersCertifications = new ArrayList<>();
 
         dto.getQuestionsAnswers().stream().forEach(questionAnswerDTO -> {
             var ask = questionsEntities.stream().filter(question -> question.getId().equals(questionAnswerDTO.getQuestionID())).findFirst().get();
@@ -41,6 +42,9 @@ public class StudentCertificationAnswersUseCase {
             } else {
                 questionAnswerDTO.setCorrect(false);
             }
+
+            var answersCertificationsEntity = AnswersCertificationsEntity.builder().answerID(questionAnswerDTO.getAlternativeID()).questionID(questionAnswerDTO.getQuestionID()).isCorrect(questionAnswerDTO.isCorrect()).build();
+            answersCertifications.add(answersCertificationsEntity);
         });
 
         var student = studentRepository.findByEmail(dto.getEmail());
@@ -55,10 +59,16 @@ public class StudentCertificationAnswersUseCase {
             studentID = student.get().getId();
         }
 
-        List<AnswersCertificationsEntity> answersCertifications = new ArrayList<>();
-
-        CertificationStudentEntity certificationStudentEntity = CertificationStudentEntity.builder().technology(dto.getTechnology()).studentID(studentID).answersCertificationsEntities(answersCertifications).build();
+        CertificationStudentEntity certificationStudentEntity = CertificationStudentEntity.builder().technology(dto.getTechnology()).studentID(studentID).build();
         var certificationStudentCreated = certificationStudentEntityRepository.save(certificationStudentEntity);
+
+        answersCertifications.stream().forEach(answersCertificationsEntity -> {
+            answersCertificationsEntity.setCertificationID(certificationStudentEntity.getId());
+            answersCertificationsEntity.setCertificationStudentEntity(certificationStudentEntity);
+        });
+
+        certificationStudentEntity.setAnswersCertificationsEntities(answersCertifications);
+        certificationStudentEntityRepository.save(certificationStudentEntity);
 
         return certificationStudentCreated;
     }
